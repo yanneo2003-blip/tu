@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>访谈录：板写的本质与动力 - 2025.12</title>
+    
+    <!-- 引入字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- 引入生成图片和打包ZIP所需的库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <style>
+        :root {
+            /* 纯白背景与装饰色 */
+            --bg-body: #FFFFFF;
+            --bg-card: #FFFFFF;
+            
+            /* 氛围光颜色 */
+            --blob-color-1: rgba(52, 199, 89, 0.15); /* 柔和绿 */
+            --blob-color-2: rgba(0, 122, 255, 0.12); /* 柔和蓝 */
+            --blob-color-3: rgba(255, 149, 0, 0.12); /* 柔和橙 */
+
+            /* 文本颜色 */
+            --text-primary: #1D1D1F; 
+            --text-secondary: #86868B;
+            --text-accent: #F5A623; /* 备忘录经典黄 */
+            
+            /* 边框与圆角 */
+            --border-light: rgba(0, 0, 0, 0.04);
+            --shadow-card: 0 12px 40px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0,0,0,0.02);
+            --radius-card: 20px;
+            
+            /* 高亮色 */
+            --highlight-bg: rgba(255, 214, 10, 0.25); 
+
+            /* 字体 */
+            --font-serif: 'Noto Serif SC', serif;
+            --font-sans: 'Noto Sans SC', sans-serif;
+            
+            /* 卡片尺寸基准 (3:4 比例) */
+            --card-width: 360px;
+            --card-min-height: 480px; /* 360 * 4 / 3 */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 100px 20px 60px; /* Top padding for fixed header */
+            display: flex;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 背景氛围光 (Background Blobs) */
+        .ambient-light {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.8;
+            animation: float 10s infinite ease-in-out alternate;
+        }
+        .blob-1 { width: 600px; height: 600px; background: var(--blob-color-1); top: -10%; left: -10%; }
+        .blob-2 { width: 500px; height: 500px; background: var(--blob-color-2); bottom: -10%; right: -5%; animation-delay: -5s; }
+        .blob-3 { width: 300px; height: 300px; background: var(--blob-color-3); top: 40%; left: 50%; transform: translate(-50%, -50%); animation-duration: 15s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(20px, 40px) scale(1.05); }
+        }
+
+        /* 顶部控制栏 */
+        .top-bar {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 10px 10px 10px 24px;
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            border: 1px solid rgba(255,255,255,0.8);
+            width: 90%;
+            max-width: 600px;
+            justify-content: space-between;
+        }
+
+        .site-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .site-title::before {
+            content: ''; display: block; width: 8px; height: 8px; background: var(--text-accent); border-radius: 50%;
+        }
+
+        .btn-download {
+            background: #1D1D1F;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-download:hover {
+            transform: scale(1.03);
+            background: #333;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .btn-download:active { transform: scale(0.98); }
+
+        /* 网格容器 */
+        .grid-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            justify-content: center;
+            max-width: 1400px;
+            align-items: flex-start;
+        }
+
+        /* 卡片基础样式 */
+        .card {
+            width: var(--card-width);
+            min-height: var(--card-min-height); /* 保证最小 3:4 */
+            height: auto;
+            background: var(--bg-card);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow-card);
+            border: 1px solid var(--border-light);
+            padding: 40px 32px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        /* 导出时保证背景不透明 */
+        .card-export-mode {
+            background: #FFFFFF !important; 
+        }
+
+        .card:hover {
+            transform: translateY(-8px) scale(1.01);
+            z-index: 10;
+        }
+
+        /* 封面卡片 */
+        .card.cover-card {
+            justify-content: space-between;
+            border: 1px solid rgba(0,0,0,0.06);
+        }
+
+        .cover-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+        }
+
+        .brand {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--text-primary);
+        }
+
+        .meta-tag {
+            font-size: 12px;
+            font-family: monospace; /* 代码感 */
+            background: #F2F2F7;
+            padding: 4px 8px;
+            border-radius: 6px;
+            color: var(--text-secondary);
+        }
+
+        .cover-main h1 {
+            font-family: var(--font-serif);
+            font-size: 34px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.25;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+
+        .author-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 32px;
+        }
+        .avatar-placeholder {
+            width: 32px; height: 32px;
+            background: var(--text-accent);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 12px; font-weight: bold;
+        }
+        .author-name {
+            font-size: 13px; font-weight: 600; color: var(--text-primary);
+        }
+
+        /* 问答卡片内容 */
+        .question-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .icon-wrap {
+            width: 28px; height: 28px;
+            color: var(--text-accent);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .question-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .answer-body {
+            font-family: var(--font-serif);
+            font-size: 17px;
+            color: #2c2c2e;
+            line-height: 1.8;
+            text-align: justify;
+        }
+
+        .answer-body p { margin-bottom: 20px; }
+
+        .highlight {
+            background: var(--highlight-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            box-decoration-break: clone;
+        }
+
+        .quote-box {
+            margin-top: 24px;
+            padding: 16px 20px;
+            background: #F9F9FB; /* 极浅的灰 */
+            border-radius: 12px;
+            font-family: var(--font-serif);
+            font-style: italic;
+            color: #666;
+            font-size: 16px;
+            position: relative;
+        }
+        .quote-box::before {
+            content: '"';
+            position: absolute;
+            top: 4px; left: 8px;
+            font-size: 40px;
+            color: rgba(0,0,0,0.05);
+            font-family: serif;
+        }
+
+        /* SVG Icons */
+        .svg-icon { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+        /* Loader */
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(5px);
+            z-index: 200;
+            display: none;
+            justify-content: center; align-items: center; flex-direction: column;
+            gap: 15px;
+        }
+        .spinner { width: 40px; height: 40px; border: 3px solid rgba(0,0,0,0.1); border-top-color: var(--text-primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 600px) {
+            :root { --card-width: 90vw; }
+            .top-bar { width: 92%; }
+            .site-title span { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 背景氛围 -->
+    <div class="ambient-light">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- 顶部悬浮栏 -->
+    <div class="top-bar">
+        <div class="site-title">访谈录 <span>/ 2025.12</span></div>
+        <button class="btn-download" onclick="downloadAllCards()">
+            <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            下载卡片 (.zip)
+        </button>
+    </div>
+
+    <!-- 加载遮罩 -->
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div style="font-size:14px; font-weight:600;">正在生成高清图片...</div>
+    </div>
+
+    <div class="grid-container" id="cards-container">
+
+        <!-- Card 1: Cover -->
+        <article class="card cover-card">
+            <div>
+                <div class="cover-top">
+                    <span class="brand">OBSERVATION</span>
+                    <span class="meta-tag">2025.12</span>
+                </div>
+                <div class="cover-main">
+                    <h1>关于板写的本质、<br>创作流与动力</h1>
+                    <p style="font-family:var(--font-serif); color:var(--text-secondary); margin-top:12px;">一场关于从“造字”到“写心”的深度复盘。</p>
+                </div>
+            </div>
+            <div class="author-info">
+                <div class="avatar-placeholder">观</div>
+                <div class="author-name">观火斋</div>
+            </div>
+        </article>
+        
+        <!-- Card 2: Q1 -->
+        <article class="card">
+            <div class="question-header">
+                <div class="icon-wrap">
+                    <svg class="svg-icon" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+                <span class="question-title">01 定义与区别</span>
+            </div>
+            <div class="answer-body">
+                <p>我认为其实没多大区别。用中性笔也是写字，用 Apple Pencil 也是写字。</p>
+                <p>本质上都是写字，各有优劣。</p>
+            </div>
+        </article>
+
+        <!-- Card 3: Q2 -->
+        <article class="card">
+            <div class="question-header">
+                <div class="icon-wrap">
+                    <svg class="svg-icon" viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </div>
+                <span class="question-title">02 创作流程</span>
+            </div>
+            <div class="answer-body">
+                <p>如果是之前的我，会倾向于极尽可能的准备：构思、草稿、搭配粗细墨色。</p>
+                <p>但现在我更偏向后者——<strong>看到内容就写</strong>。当然，“撤回”功能也是应该得合理使用的。</p>
+                <div class="quote-box">
+                    随性发挥总归是表达自己，这是比刻意创作更高级的东西。
+                </div>
+            </div>
+        </article>
+
+        <!-- Card 4: Q3 -->
+        <article class="card">
+            <div class="question-header">
+                <div class="icon-wrap">
+                    <svg class="svg-icon" viewBox="0 0 24 24">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                    </svg>
+                </div>
+                <span class="question-title">03 动力来源</span>
+            </div>
+            <div class="answer-body">
+                <p>保持随性可以让写字的压力没那么大，<strong>完成比完美更重要</strong>。</p>
+                <p>长期动力是非常主观的。建议保持影视飓风<span class="highlight">“无限进步”</span>那样的心态：在日常中多看好的作品，审美好起来，内心会极度渴望进步，动力自然出现。</p>
+            </div>
+        </article>
+
+        <!-- Card 5: Q4 -->
+        <article class="card">
+            <div class="question-header">
+                <div class="icon-wrap">
+                    <svg class="svg-icon" viewBox="0 0 24 24">
+                        <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                        <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                        <path d="M2 2l7.586 7.586"></path>
+                        <circle cx="11" cy="11" r="2"></circle>
+                    </svg>
+                </div>
+                <span class="question-title">04 工具与笔刷</span>
+            </div>
+            <div class="answer-body">
+                <p>最常用 <strong>Procreate</strong>。试过数位板，手眼不协同很难受。最后买根 Pencil，很方便且很值！</p>
+                <p>基本固定在几根好用的里面循环。<span class="highlight">找到合适自己的笔刷是一件非常难的事情。</span></p>
+            </div>
+        </article>
+
+    </div>
+
+    <script>
+        async function downloadAllCards() {
+            const loader = document.getElementById('loading-overlay');
+            loader.style.display = 'flex';
+            
+            const zip = new JSZip();
+            const cards = document.querySelectorAll('.card');
+            const imgFolder = zip.folder("板写访谈卡片");
+            
+            try {
+                // 等待字体加载完成，防止图片文字乱码
+                await document.fonts.ready;
+
+                for (let i = 0; i < cards.length; i++) {
+                    const card = cards[i];
+                    
+                    // 临时添加白色背景，防止截图包含背景的模糊颜色
+                    card.classList.add('card-export-mode');
+                    
+                    // 生成图片
+                    const blob = await htmlToImage.toBlob(card, {
+                        quality: 1.0,
+                        pixelRatio: 2, // 2倍图，保证高清
+                        backgroundColor: '#FFFFFF', // 强制背景白
+                        style: {
+                            margin: '0', // 移除可能的margin影响
+                            transform: 'none', // 移除hover效果
+                            boxShadow: 'none', // 导出时可以去掉阴影让图片更干净，或者保留
+                        }
+                    });
+                    
+                    // 移除临时样式
+                    card.classList.remove('card-export-mode');
+                    
+                    if (blob) {
+                        const fileName = `Card_${i+1}_${i===0 ? 'Cover' : 'Part'}.png`;
+                        imgFolder.file(fileName, blob);
+                    }
+                }
+                
+                // 生成并下载ZIP
+                const content = await zip.generateAsync({type:"blob"});
+                saveAs(content, "观火斋_板写访谈录_2025.12.zip");
+                
+            } catch (error) {
+                console.error('oops, something went wrong!', error);
+                alert('图片生成失败，请刷新重试或更换浏览器。');
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
+
